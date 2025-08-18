@@ -1,0 +1,182 @@
+generator client {
+  provider  = "prisma-client-js"
+  output    = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  user_id               String            @id @unique @default(nanoid())
+  email                 String            @unique
+  password              String
+  name                  String
+  profile_image         String
+  totp_secret           String
+  is_2fa_active         Boolean           @default(false)
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  class_owner           Class[]
+  class_member          ClassMember[]
+  assignments           ClassAssignments[]
+  submited_assignments  SubmissionResult[]
+  quiz                  ClassQuiz[]
+  submited_quiz         QuizResult[]
+  comment               Comment[]
+}
+
+model Class {
+  class_id              String            @id @unique @default(nanoid())
+  name                  String
+  description           String
+  class_code            String            @unique @default(nanoid(8))
+  class_members         ClassMember[]
+  class_timeline        ClassPost[]
+  class_assignments     ClassAssignments[]
+  class_quiz            ClassQuiz[]
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  owner_user_id         String
+  class_owner           User              @relation(fields: [owner_user_id], references: [user_id])
+}
+
+model Comment {
+  comment_id            String            @id @unique @default(nanoid())
+  content               String
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  user_id               String
+  user                  User              @relation(fields: [user_id], references: [user_id])
+
+  post_id               String?
+  post                  ClassPost?        @relation(fields: [post_id], references: [post_id])
+  assignments_id        String?
+  assignments           ClassAssignments? @relation(fields: [assignments_id], references: [assignments_id])
+  assignments_result_id String?
+  assignments_result    SubmissionResult? @relation(fields: [assignments_result_id], references: [result_id])
+  quiz_id               String?
+  quiz                  ClassQuiz?        @relation(fields: [quiz_id], references: [quiz_id])
+  quiz_result_id        String?
+  quiz_result           QuizResult?       @relation(fields: [quiz_result_id], references: [result_id])
+}
+
+model ClassMember {
+  class_member_id       String            @id @unique @default(nanoid())
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  user_id               String
+  class_code            String
+  user                  User              @relation(fields: [user_id], references: [user_id])
+  class                 Class             @relation(fields: [class_code], references: [class_code])
+
+  @@index([user_id, class_code])
+  @@unique([user_id, class_code])
+}
+
+model ClassPost {
+  post_id               String            @id @unique @default(nanoid())
+  content               String
+  attachment            String[]          @db.Text
+  comment               Comment[]
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  class_id              String
+  class                 Class             @relation(fields: [class_id], references: [class_id])
+}
+
+model ClassAssignments {
+  assignments_id        String            @id @unique @default(nanoid())
+  title                 String
+  content               String
+  topic                 String            @unique
+  attachment            String[]          @db.Text
+  start_date            DateTime
+  due_date              DateTime
+  is_available          Boolean           @default(true)
+  comment               Comment[]
+  result                SubmissionResult[]
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  class_id              String
+  class                 Class             @relation(fields: [class_id], references: [class_id])
+  user_id               String
+  user                  User              @relation(fields: [user_id], references: [user_id])
+}
+
+model SubmissionResult {
+  result_id             String            @id @unique @default(nanoid())
+  attachment            String[]          @db.Text
+  point                 Int               @default(0)
+  comment               Comment[]
+  submited_at           DateTime          @default(now())
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  assignments_id        String
+  assignments           ClassAssignments  @relation(fields: [assignments_id], references: [assignments_id])
+  user_id               String
+  user                  User              @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, assignments_id])
+  @@unique([user_id, assignments_id])
+}
+
+model ClassQuiz {
+  quiz_id               String            @id @unique @default(nanoid())
+  title                 String
+  description           String
+  topic                 String            @unique
+  attachment            String[]          @db.Text
+  start_date            DateTime
+  due_date              DateTime
+  is_available          Boolean           @default(true)
+  quiz_content          QuizContent[]
+  result                QuizResult[]
+  comment               Comment[]
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  class_id              String
+  class                 Class             @relation(fields: [class_id], references: [class_id])
+  user_id               String
+  user                  User              @relation(fields: [user_id], references: [user_id])
+}
+
+model QuizContent {
+  quiz_content_id       String            @id @unique @default(nanoid())
+  question              String
+  answer                Json?
+  right_answer          Json?
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  quiz_id               String
+  quiz                  ClassQuiz         @relation(fields: [quiz_id], references: [quiz_id])
+}
+
+model QuizResult {
+  result_id             String            @id @unique @default(nanoid())
+  answer                Json?
+  point                 Int               @default(0)
+  comment               Comment[]
+  submited_at           DateTime          @default(now())
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  quiz_id               String
+  quiz                  ClassQuiz         @relation(fields: [quiz_id], references: [quiz_id])
+  user_id               String
+  user                  User              @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, quiz_id])
+  @@unique([user_id, quiz_id])
+}
