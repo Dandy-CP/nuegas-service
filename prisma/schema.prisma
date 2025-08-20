@@ -14,8 +14,8 @@ model User {
   email                 String            @unique
   password              String
   name                  String
-  profile_image         String
-  totp_secret           String
+  profile_image         String?
+  totp_secret           String?
   is_2fa_active         Boolean           @default(false)
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
@@ -26,6 +26,7 @@ model User {
   submited_assignments  SubmissionResult[]
   quiz                  ClassQuiz[]
   submited_quiz         QuizResult[]
+  post                  ClassPost[]
   comment               Comment[]
 }
 
@@ -33,11 +34,12 @@ model Class {
   class_id              String            @id @unique @default(nanoid())
   name                  String
   description           String
-  class_code            String            @unique @default(nanoid(8))
+  class_code            String            @unique
   class_members         ClassMember[]
   class_timeline        ClassPost[]
   class_assignments     ClassAssignments[]
   class_quiz            ClassQuiz[]
+  class_topic           ClassTopic[]
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
 
@@ -66,8 +68,23 @@ model Comment {
   quiz_result           QuizResult?       @relation(fields: [quiz_result_id], references: [result_id])
 }
 
+model ClassTopic {
+  topic_id              String            @id @unique @default(nanoid())
+  name                  String
+
+  class_id              String
+  class                 Class             @relation(fields: [class_id], references: [class_id])
+
+  assignments_id        String?           @unique
+  assignments           ClassAssignments? @relation(fields: [assignments_id], references: [assignments_id])
+
+  quiz_id               String?           @unique
+  quiz                  ClassQuiz?        @relation(fields: [quiz_id], references: [quiz_id])
+}
+
 model ClassMember {
   class_member_id       String            @id @unique @default(nanoid())
+  role                  String            @default("MEMBER")
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
 
@@ -90,13 +107,15 @@ model ClassPost {
 
   class_id              String
   class                 Class             @relation(fields: [class_id], references: [class_id])
+  user_id               String
+  user                  User              @relation(fields: [user_id], references: [user_id])
 }
 
 model ClassAssignments {
   assignments_id        String            @id @unique @default(nanoid())
   title                 String
   content               String
-  topic                 String            @unique
+  topic                 ClassTopic?
   attachment            String[]          @db.Text
   start_date            DateTime
   due_date              DateTime
@@ -133,8 +152,8 @@ model SubmissionResult {
 model ClassQuiz {
   quiz_id               String            @id @unique @default(nanoid())
   title                 String
-  description           String
-  topic                 String            @unique
+  description           String?
+  topic                 ClassTopic?       
   attachment            String[]          @db.Text
   start_date            DateTime
   due_date              DateTime
