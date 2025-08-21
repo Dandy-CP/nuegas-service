@@ -28,6 +28,7 @@ model User {
   submited_quiz         QuizResult[]
   post                  ClassPost[]
   comment               Comment[]
+  files                 File[]
 }
 
 model Class {
@@ -75,11 +76,8 @@ model ClassTopic {
   class_id              String
   class                 Class             @relation(fields: [class_id], references: [class_id])
 
-  assignments_id        String?           @unique
-  assignments           ClassAssignments? @relation(fields: [assignments_id], references: [assignments_id])
-
-  quiz_id               String?           @unique
-  quiz                  ClassQuiz?        @relation(fields: [quiz_id], references: [quiz_id])
+  assignments           ClassAssignments[]
+  quizzes               ClassQuiz[]
 }
 
 model ClassMember {
@@ -115,7 +113,6 @@ model ClassAssignments {
   assignments_id        String            @id @unique @default(nanoid())
   title                 String
   content               String
-  topic                 ClassTopic?
   attachment            String[]          @db.Text
   start_date            DateTime
   due_date              DateTime
@@ -129,6 +126,8 @@ model ClassAssignments {
   class                 Class             @relation(fields: [class_id], references: [class_id])
   user_id               String
   user                  User              @relation(fields: [user_id], references: [user_id])
+  topic_id              String
+  topic                 ClassTopic        @relation(fields: [topic_id], references: [topic_id])
 }
 
 model SubmissionResult {
@@ -152,8 +151,7 @@ model SubmissionResult {
 model ClassQuiz {
   quiz_id               String            @id @unique @default(nanoid())
   title                 String
-  description           String?
-  topic                 ClassTopic?       
+  description           String?     
   attachment            String[]          @db.Text
   start_date            DateTime
   due_date              DateTime
@@ -166,25 +164,42 @@ model ClassQuiz {
 
   class_id              String
   class                 Class             @relation(fields: [class_id], references: [class_id])
+
   user_id               String
   user                  User              @relation(fields: [user_id], references: [user_id])
+
+  topic_id              String
+  topic                 ClassTopic        @relation(fields: [topic_id], references: [topic_id])
 }
 
 model QuizContent {
   quiz_content_id       String            @id @unique @default(nanoid())
   question              String
-  answer                Json?
-  right_answer          Json?
+  attachment            String[]          @db.Text
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
 
   quiz_id               String
-  quiz                  ClassQuiz         @relation(fields: [quiz_id], references: [quiz_id])
+  quiz                  ClassQuiz         @relation(fields: [quiz_id], references: [quiz_id], onDelete: Cascade)
+
+  options               QuizOption[]
+
+  QuizAnswer            QuizAnswer[]
+}
+
+model QuizOption {
+  option_id             String            @id @default(nanoid())
+  text                  String
+  is_correct            Boolean           @default(false)
+
+  quiz_content_id       String
+  quiz_content          QuizContent       @relation(fields: [quiz_content_id], references: [quiz_content_id], onDelete: Cascade)
+
+  QuizAnswer            QuizAnswer[]
 }
 
 model QuizResult {
   result_id             String            @id @unique @default(nanoid())
-  answer                Json?
   point                 Int               @default(0)
   comment               Comment[]
   submited_at           DateTime          @default(now())
@@ -192,10 +207,37 @@ model QuizResult {
   updated_at            DateTime          @updatedAt
 
   quiz_id               String
-  quiz                  ClassQuiz         @relation(fields: [quiz_id], references: [quiz_id])
+  quiz                  ClassQuiz         @relation(fields: [quiz_id], references: [quiz_id], onDelete: Cascade)
+
   user_id               String
   user                  User              @relation(fields: [user_id], references: [user_id])
 
+  answers               QuizAnswer[]
+
   @@index([user_id, quiz_id])
   @@unique([user_id, quiz_id])
+}
+
+model QuizAnswer {
+  answer_id             String             @id @default(nanoid())
+  quiz_content_id       String
+  quiz_content          QuizContent        @relation(fields: [quiz_content_id], references: [quiz_content_id], onDelete: Cascade)
+
+  option_id             String
+  option                QuizOption         @relation(fields: [option_id], references: [option_id], onDelete: Cascade)
+
+  result_id             String
+  result                QuizResult         @relation(fields: [result_id], references: [result_id], onDelete: Cascade)
+}
+
+model File {
+  file_id               String             @id @default(nanoid())
+  filename              String
+  url                   String
+  mimetype              String?
+  size                  Int?
+  uploaded_by           String
+
+  user                  User               @relation(fields: [uploaded_by], references: [user_id])
+  created_at            DateTime           @default(now())
 }
