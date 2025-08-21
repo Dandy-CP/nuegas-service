@@ -1,11 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {
-  CreateCommentBody,
-  CreatePostBody,
-  EditCommentBody,
-  EditPostBody,
-} from './dto/payload.dto';
+import { CreatePostBody, EditPostBody } from './dto/payload.dto';
 
 @Injectable()
 export class PostService {
@@ -191,71 +186,6 @@ export class PostService {
 
     return {
       message: 'Success delete class post',
-    };
-  }
-
-  async createPostComment(
-    payload: CreateCommentBody,
-    userId: string,
-    postId: string,
-  ) {
-    const postInDB = await this.prisma.classPost.findUnique({
-      where: {
-        post_id: postId,
-      },
-    });
-
-    if (!postInDB) throw new NotFoundException('Post not found');
-
-    return await this.prisma.comment.create({
-      data: {
-        content: payload.content,
-        user_id: userId,
-        post_id: postId,
-      },
-    });
-  }
-
-  async editPostCommnet(payload: EditCommentBody, commentId: string) {
-    const commentPostInDB = await this.prisma.comment.findUnique({
-      where: {
-        comment_id: commentId,
-      },
-    });
-
-    if (!commentPostInDB) throw new NotFoundException('Comment not found');
-
-    await this.prisma.comment.update({
-      data: {
-        content: payload.content,
-      },
-      where: {
-        comment_id: commentId,
-      },
-    });
-
-    return {
-      message: 'Success edit post comment',
-    };
-  }
-
-  async deletePostComment(commentId: string) {
-    const commentPostInDB = await this.prisma.comment.findUnique({
-      where: {
-        comment_id: commentId,
-      },
-    });
-
-    if (!commentPostInDB) throw new NotFoundException('Comment not found');
-
-    await this.prisma.comment.delete({
-      where: {
-        comment_id: commentId,
-      },
-    });
-
-    return {
-      message: 'Success delete comment',
     };
   }
 }

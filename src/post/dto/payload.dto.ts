@@ -11,15 +11,3 @@ export class EditPostBody {
   @IsString()
   content: string;
 }
-
-export class CreateCommentBody {
-  @IsNotEmpty()
-  @IsString()
-  content: string;
-}
-
-export class EditCommentBody {
-  @IsNotEmpty()
-  @IsString()
-  content: string;
-}

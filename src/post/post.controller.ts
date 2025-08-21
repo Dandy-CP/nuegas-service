@@ -8,12 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { PostService } from './post.service';
-import {
-  CreateCommentBody,
-  CreatePostBody,
-  EditCommentBody,
-  EditPostBody,
-} from './dto/payload.dto';
+import { CreatePostBody, EditPostBody } from './dto/payload.dto';
 import { GetUser } from 'src/auth/decorator/user.decorator';
 import { JWTPayloadUser } from 'src/auth/types/auth.type';
 
@@ -56,27 +51,5 @@ export class PostController {
   @Delete()
   deletePost(@Query('post_id') postId: string) {
     return this.postService.deleteClassPost(postId);
-  }
-
-  @Post('/comment')
-  createPostComment(
-    @Body() payload: CreateCommentBody,
-    @Query('post_id') postId: string,
-    @GetUser() user: JWTPayloadUser,
-  ) {
-    return this.postService.createPostComment(payload, user.user_id, postId);
-  }
-
-  @Put('/comment')
-  editPostComment(
-    @Body() payload: EditCommentBody,
-    @Query('comment_id') commentId: string,
-  ) {
-    return this.postService.editPostCommnet(payload, commentId);
-  }
-
-  @Delete('/comment')
-  deletePostComment(@Query('comment_id') commentId: string) {
-    return this.postService.deletePostComment(commentId);
   }
 }
