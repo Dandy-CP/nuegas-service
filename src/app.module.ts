@@ -1,13 +1,18 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ClassModule } from './class/class.module';
 import { PostModule } from './post/post.module';
-import { JwtModule } from '@nestjs/jwt';
 import { AssignmentModule } from './assignment/assignment.module';
+import { TopicModule } from './topic/topic.module';
+import { CommentModule } from './comment/comment.module';
+import { SupabaseModule } from './supabase/supabase.module';
+import { UploadModule } from './upload/upload.module';
+import { QuizModule } from './quiz/quiz.module';
 
 @Module({
   imports: [
@@ -20,10 +25,15 @@ import { AssignmentModule } from './assignment/assignment.module';
       },
     }),
     PrismaModule,
+    SupabaseModule,
     AuthModule,
     ClassModule,
     PostModule,
     AssignmentModule,
+    TopicModule,
+    CommentModule,
+    UploadModule,
+    QuizModule,
   ],
   controllers: [AppController],
   providers: [AppService],
