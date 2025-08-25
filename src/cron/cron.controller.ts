@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Query, UnauthorizedException } from '@nestjs/common';
 import { Public } from '../auth/decorator/public.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -7,8 +7,8 @@ export class CronController {
   constructor(private prisma: PrismaService) {}
 
   @Public()
-  @Get('check-expired-task/:secret')
-  async handleExpireCheck(@Param('secret') secret: string) {
+  @Get('check-expired-task')
+  async handleExpireCheck(@Query('secret') secret: string) {
     if (secret !== process.env.CRON_SECRET) {
       throw new UnauthorizedException('Invalid secret');
     }
