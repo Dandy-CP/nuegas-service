@@ -10,5 +10,9 @@ export class UploadBodyDTO {
 export class DeleteFileDTO {
   @IsNotEmpty()
   @IsString()
+  file_id: string;
+
+  @IsNotEmpty()
+  @IsString()
   file_name: string;
 }
