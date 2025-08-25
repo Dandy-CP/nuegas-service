@@ -15,7 +15,7 @@
   ],
   "crons": [
     {
-      "path": "/cron/check-expired-task/@cron-secret",
+      "path": "/cron/check-expired-task?secret=@CRON_SECRET",
       "schedule": "0 17 * * *"
     }
   ]
