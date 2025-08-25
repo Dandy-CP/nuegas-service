@@ -4,26 +4,47 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ClassService } from 'src/class/class.service';
 import { CreateQuizBody, SubmitQuizDto } from './dto/payload.dto';
+import { QueryPagination } from 'src/prisma/dto/pagination.dto';
 
 @Injectable()
 export class QuizService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private classService: ClassService,
+  ) {}
 
-  async getClassQuizList(classId: string) {
-    return await this.prisma.classQuiz.findMany({
-      where: {
-        class_id: classId,
-      },
-      omit: {
-        class_id: true,
-        user_id: true,
-        topic_id: true,
-      },
-    });
+  async getClassQuizList(
+    classId: string,
+    queryPage: QueryPagination,
+    userId: string,
+  ) {
+    await this.classService.isMemberInClass(userId);
+
+    const [data, meta] = await this.prisma
+      .extends()
+      .classQuiz.paginate({
+        where: {
+          class_id: classId,
+        },
+        omit: {
+          class_id: true,
+          user_id: true,
+          topic_id: true,
+        },
+      })
+      .withPages({
+        page: queryPage.page,
+        limit: queryPage.limit,
+      });
+
+    return { data, meta };
   }
 
-  async getClassQuizDetail(quizId: string) {
+  async getClassQuizDetail(quizId: string, userId: string) {
+    await this.classService.isMemberInClass(userId);
+
     const classQuizInDB = await this.prisma.classQuiz.findUnique({
       where: {
         quiz_id: quizId,
@@ -92,6 +113,43 @@ export class QuizService {
     return existingResult;
   }
 
+  async getAllMemberResultQuiz(
+    quizId: string,
+    queryPage: QueryPagination,
+    userId: string,
+  ) {
+    await this.classService.isUserOwnerClass(userId);
+
+    const [data, meta] = await this.prisma
+      .extends()
+      .quizResult.paginate({
+        where: {
+          quiz_id: quizId,
+        },
+        include: {
+          user: {
+            select: {
+              user_id: true,
+              name: true,
+            },
+          },
+        },
+        omit: {
+          user_id: true,
+          quiz_id: true,
+        },
+      })
+      .withPages({
+        page: queryPage.page,
+        limit: queryPage.limit,
+      });
+
+    return {
+      data,
+      meta,
+    };
+  }
+
   async createQuiz(payload: CreateQuizBody, classId: string, userId: string) {
     const classInDB = await this.prisma.class.findUnique({
       where: {
@@ -101,19 +159,7 @@ export class QuizService {
 
     if (!classInDB) throw new NotFoundException('Class not found');
 
-    const classMemberInDB = await this.prisma.classMember.findUnique({
-      where: {
-        user_id_class_code: {
-          user_id: userId,
-          class_code: classInDB.class_code,
-        },
-      },
-    });
-
-    if (classMemberInDB?.role !== 'OWNER')
-      throw new UnprocessableEntityException(
-        'Create Quiz must be Owner member',
-      );
+    await this.classService.isUserOwnerClass(userId);
 
     return await this.prisma.classQuiz.create({
       data: {
@@ -170,19 +216,7 @@ export class QuizService {
 
     if (!quizInDB) throw new NotFoundException('Quiz not found');
 
-    const classMemberInDB = await this.prisma.classMember.findUnique({
-      where: {
-        user_id_class_code: {
-          user_id: userId,
-          class_code: quizInDB.class.class_code,
-        },
-      },
-    });
-
-    if (classMemberInDB?.role !== 'OWNER')
-      throw new UnprocessableEntityException(
-        'Create Quiz must be Owner member',
-      );
+    await this.classService.isUserOwnerClass(userId);
 
     return await this.prisma.classQuiz.update({
       where: {
@@ -233,19 +267,7 @@ export class QuizService {
 
     if (!quizInDB) throw new NotFoundException('Quiz not found');
 
-    const classMemberInDB = await this.prisma.classMember.findUnique({
-      where: {
-        user_id_class_code: {
-          user_id: userId,
-          class_code: quizInDB.class.class_code,
-        },
-      },
-    });
-
-    if (classMemberInDB?.role !== 'OWNER')
-      throw new UnprocessableEntityException(
-        'Create Quiz must be Owner member',
-      );
+    await this.classService.isUserOwnerClass(userId);
 
     await this.prisma.classQuiz.delete({
       where: { quiz_id: quizId },
@@ -261,6 +283,8 @@ export class QuizService {
     quizId: string,
     userId: string,
   ) {
+    await this.classService.isMemberInClass(userId);
+
     const quizInDB = await this.prisma.classQuiz.findUnique({
       where: {
         quiz_id: quizId,

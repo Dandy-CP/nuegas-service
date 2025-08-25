@@ -11,19 +11,27 @@ import { QuizService } from './quiz.service';
 import { CreateQuizBody, SubmitQuizDto } from './dto/payload.dto';
 import { GetUser } from 'src/auth/decorator/user.decorator';
 import { JWTPayloadUser } from 'src/auth/types/auth.type';
+import { QueryPagination } from 'src/prisma/dto/pagination.dto';
 
 @Controller('quiz')
 export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
   @Get()
-  getQuizList(@Query('class_id') classId: string) {
-    return this.quizService.getClassQuizList(classId);
+  getQuizList(
+    @Query('class_id') classId: string,
+    @Query() queryPage: QueryPagination,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.quizService.getClassQuizList(classId, queryPage, user.user_id);
   }
 
   @Get('/detail')
-  getQuizDetail(@Query('quiz_id') quizId: string) {
-    return this.quizService.getClassQuizDetail(quizId);
+  getQuizDetail(
+    @Query('quiz_id') quizId: string,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.quizService.getClassQuizDetail(quizId, user.user_id);
   }
 
   @Get('/detail-result')
@@ -32,6 +40,19 @@ export class QuizController {
     @Query('quiz_id') quizId: string,
   ) {
     return this.quizService.getMemberResultQuiz(user.user_id, quizId);
+  }
+
+  @Get('/all-member-result')
+  getAllMemberResult(
+    @Query('quiz_id') quizId: string,
+    @GetUser() user: JWTPayloadUser,
+    @Query() queryPage: QueryPagination,
+  ) {
+    return this.quizService.getAllMemberResultQuiz(
+      quizId,
+      queryPage,
+      user.user_id,
+    );
   }
 
   @Post()
