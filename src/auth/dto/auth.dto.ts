@@ -59,3 +59,18 @@ export class Disable2FABodyDTO {
   @IsString()
   token_pin: string;
 }
+
+export class AcceptInvitationBodyDTO {
+  @IsNotEmpty()
+  name: string;
+
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  password: string;
+
+  @IsNotEmpty()
+  token: string;
+}

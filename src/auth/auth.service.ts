@@ -1,12 +1,18 @@
 import {
+  BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SignInBodyDTO, SignUpBodyDTO } from './dto/auth.dto';
+import {
+  AcceptInvitationBodyDTO,
+  SignInBodyDTO,
+  SignUpBodyDTO,
+} from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -85,6 +91,50 @@ export class AuthService {
     return {
       message: 'Success Register new account',
       data: createdValue,
+    };
+  }
+
+  async acceptInvitation(payload: AcceptInvitationBodyDTO) {
+    const invitation = await this.prisma.invitation.findUnique({
+      where: { token: payload.token },
+      include: {
+        class: true,
+      },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException('Invitation not found or expired');
+    }
+
+    if (invitation.expires_at < new Date()) {
+      await this.prisma.invitation.update({
+        where: { id: invitation.id },
+        data: { status: 'expired' },
+      });
+
+      throw new BadRequestException('Invitation expired');
+    }
+
+    const createdUser = await this.signUp({
+      name: payload.name,
+      email: payload.email,
+      password: payload.password,
+    });
+
+    await this.prisma.classMember.create({
+      data: {
+        class_code: invitation.class.class_code,
+        user_id: createdUser.data.user_id,
+      },
+    });
+
+    await this.prisma.invitation.delete({
+      where: { id: invitation.id },
+    });
+
+    return {
+      message: 'Invitation accepted',
+      data: createdUser,
     };
   }
 }
