@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateClassBody, InviteMemberBody } from './dto/payload.dto';
-import { genClassCode } from 'utils/genClassCode';
+import { genClassCode } from '../../utils/genClassCode';
 import { QueryPagination } from 'src/prisma/dto/pagination.dto';
 import { NodemailerService } from 'src/nodemailer/nodemailer.service';
 

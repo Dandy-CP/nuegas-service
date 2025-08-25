@@ -1,6 +1,6 @@
 import { IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { toNumeric } from 'utils/toNumeric';
+import { toNumeric } from '../../../utils/toNumeric';
 
 export class QueryPagination {
   @IsOptional()
