@@ -3,7 +3,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { nanoid } from 'nanoid';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateClassBody, InviteMemberBody } from './dto/payload.dto';
 import { genClassCode } from 'utils/genClassCode';
@@ -107,7 +106,7 @@ export class ClassService {
   }
 
   async createMyClass(payload: CreateClassBody, userId: string) {
-    const classCode = genClassCode();
+    const classCode = await genClassCode();
 
     const createdValue = await this.prisma.class.create({
       data: {
@@ -252,6 +251,7 @@ export class ClassService {
       }
 
       // if user not registered then send invitation email
+      const { nanoid } = await import('nanoid');
       const tokenId = nanoid();
       const invitedUser = await this.prisma.invitation.create({
         data: {
