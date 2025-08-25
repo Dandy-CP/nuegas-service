@@ -4,11 +4,16 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ClassService } from 'src/class/class.service';
 import { CreateCommentBody, EditCommentBody } from './dto/payload.dto';
+import { QueryPagination } from 'src/prisma/dto/pagination.dto';
 
 @Injectable()
 export class CommentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private classService: ClassService,
+  ) {}
 
   async getListComment(
     postId: string,
@@ -16,6 +21,8 @@ export class CommentService {
     quizId: string,
     assignments_result_id: string,
     quiz_result_id: string,
+    queryPage: QueryPagination,
+    userId: string,
   ) {
     if (
       !postId &&
@@ -26,32 +33,45 @@ export class CommentService {
     )
       throw new UnprocessableEntityException('Query not provided');
 
-    return await this.prisma.comment.findMany({
-      where: {
-        post_id: postId,
-        assignments_id: assignmentId,
-        quiz_id: quizId,
-        assignments_result_id: assignments_result_id,
-        quiz_result_id: quiz_result_id,
-      },
-      include: {
-        user: {
-          select: {
-            user_id: true,
-            name: true,
-            profile_image: true,
+    await this.classService.isMemberInClass(userId);
+
+    const [data, meta] = await this.prisma
+      .extends()
+      .comment.paginate({
+        where: {
+          post_id: postId,
+          assignments_id: assignmentId,
+          quiz_id: quizId,
+          assignments_result_id: assignments_result_id,
+          quiz_result_id: quiz_result_id,
+        },
+        include: {
+          user: {
+            select: {
+              user_id: true,
+              name: true,
+              profile_image: true,
+            },
           },
         },
-      },
-      omit: {
-        post_id: true,
-        user_id: true,
-        assignments_id: true,
-        assignments_result_id: true,
-        quiz_id: true,
-        quiz_result_id: true,
-      },
-    });
+        omit: {
+          post_id: true,
+          user_id: true,
+          assignments_id: true,
+          assignments_result_id: true,
+          quiz_id: true,
+          quiz_result_id: true,
+        },
+      })
+      .withPages({
+        page: queryPage.page,
+        limit: queryPage.limit,
+      });
+
+    return {
+      data,
+      meta,
+    };
   }
 
   async createComment(
@@ -72,6 +92,8 @@ export class CommentService {
     )
       throw new UnprocessableEntityException('Query not provided');
 
+    await this.classService.isMemberInClass(userId);
+
     return await this.prisma.comment.create({
       data: {
         content: payload.content,
@@ -85,7 +107,11 @@ export class CommentService {
     });
   }
 
-  async editPostCommnet(payload: EditCommentBody, commentId: string) {
+  async editPostComment(
+    payload: EditCommentBody,
+    commentId: string,
+    userId: string,
+  ) {
     if (!commentId)
       throw new UnprocessableEntityException('Query "comment_id" not provided');
 
@@ -96,6 +122,8 @@ export class CommentService {
     });
 
     if (!commentInDB) throw new NotFoundException('Comment not found');
+
+    await this.classService.isMemberInClass(userId);
 
     await this.prisma.comment.update({
       data: {

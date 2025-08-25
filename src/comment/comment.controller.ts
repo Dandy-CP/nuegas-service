@@ -12,19 +12,26 @@ import { CreateCommentBody, EditCommentBody } from './dto/payload.dto';
 import { GetUser } from 'src/auth/decorator/user.decorator';
 import { JWTPayloadUser } from 'src/auth/types/auth.type';
 import { CommentQuery } from './dto/query.dto';
+import { QueryPagination } from 'src/prisma/dto/pagination.dto';
 
 @Controller('comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   @Get()
-  getListComment(@Query() query: CommentQuery) {
+  getListComment(
+    @Query() query: CommentQuery,
+    @Query() queryPage: QueryPagination,
+    @GetUser() user: JWTPayloadUser,
+  ) {
     return this.commentService.getListComment(
       query.post_id,
       query.assignment_id,
       query.quiz_id,
       query.assignments_result_id,
       query.quiz_result_id,
+      queryPage,
+      user.user_id,
     );
   }
 
@@ -49,8 +56,13 @@ export class CommentController {
   editComment(
     @Body() payload: EditCommentBody,
     @Query('comment_id') commentId: string,
+    @GetUser() user: JWTPayloadUser,
   ) {
-    return this.commentService.editPostCommnet(payload, commentId);
+    return this.commentService.editPostComment(
+      payload,
+      commentId,
+      user.user_id,
+    );
   }
 
   @Delete()
