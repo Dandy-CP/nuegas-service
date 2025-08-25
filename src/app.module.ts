@@ -13,6 +13,8 @@ import { CommentModule } from './comment/comment.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { UploadModule } from './upload/upload.module';
 import { QuizModule } from './quiz/quiz.module';
+import { NodemailerModule } from './nodemailer/nodemailer.module';
+import { CronModule } from './cron/corn.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { QuizModule } from './quiz/quiz.module';
     }),
     PrismaModule,
     SupabaseModule,
+    NodemailerModule,
+    CronModule,
     AuthModule,
     ClassModule,
     PostModule,
