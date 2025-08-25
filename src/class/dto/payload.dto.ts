@@ -15,5 +15,5 @@ export class InviteMemberBody {
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
-  users: string[];
+  email: string[];
 }
