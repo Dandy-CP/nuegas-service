@@ -15,7 +15,7 @@
   ],
   "crons": [
     {
-      "path": "https://nuegas-service.vercel.app/cron/check-expired-task/@cron-secret",
+      "path": "/cron/check-expired-task/@cron-secret",
       "schedule": "0 17 * * *"
     }
   ]
