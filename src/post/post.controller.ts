@@ -11,24 +11,31 @@ import { PostService } from './post.service';
 import { CreatePostBody, EditPostBody } from './dto/payload.dto';
 import { GetUser } from 'src/auth/decorator/user.decorator';
 import { JWTPayloadUser } from 'src/auth/types/auth.type';
+import { QueryPagination } from 'src/prisma/dto/pagination.dto';
 
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Get('/timeline')
-  getPostTimeline(@Query('class_id') classId: string) {
-    return this.postService.getClassPostTimeline(classId);
+  getPostTimeline(
+    @Query('class_id') classId: string,
+    @Query() queryPage: QueryPagination,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.postService.getClassPostTimeline(
+      classId,
+      queryPage,
+      user.user_id,
+    );
   }
 
   @Get('/detail')
-  getPostDetail(@Query('post_id') postId: string) {
-    return this.postService.getPostDetail(postId);
-  }
-
-  @Get('/list-comment')
-  getListComment(@Query('post_id') postId: string) {
-    return this.postService.getPostListComment(postId);
+  getPostDetail(
+    @Query('post_id') postId: string,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.postService.getPostDetail(postId, user.user_id);
   }
 
   @Post('/create')
@@ -44,12 +51,16 @@ export class PostController {
   editPostClass(
     @Body() payload: EditPostBody,
     @Query('post_id') postId: string,
+    @GetUser() user: JWTPayloadUser,
   ) {
-    return this.postService.editClassPost(payload, postId);
+    return this.postService.editClassPost(payload, postId, user.user_id);
   }
 
   @Delete()
-  deletePost(@Query('post_id') postId: string) {
-    return this.postService.deleteClassPost(postId);
+  deletePost(
+    @Query('post_id') postId: string,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.postService.deleteClassPost(postId, user.user_id);
   }
 }

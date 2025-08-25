@@ -1,52 +1,76 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ClassService } from 'src/class/class.service';
 import { CreatePostBody, EditPostBody } from './dto/payload.dto';
+import { QueryPagination } from 'src/prisma/dto/pagination.dto';
 
 @Injectable()
 export class PostService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private classService: ClassService,
+  ) {}
 
-  async getClassPostTimeline(classId: string) {
-    return await this.prisma.classPost.findMany({
-      where: {
-        class_id: classId,
-      },
-      include: {
-        user: {
-          select: {
-            user_id: true,
-            name: true,
-            profile_image: true,
-          },
+  async getClassPostTimeline(
+    classId: string,
+    queryPage: QueryPagination,
+    userId: string,
+  ) {
+    await this.classService.isMemberInClass(userId);
+
+    const [data, meta] = await this.prisma
+      .extends()
+      .classPost.paginate({
+        where: {
+          class_id: classId,
         },
-        comment: {
-          include: {
-            user: {
-              select: {
-                user_id: true,
-                name: true,
-                profile_image: true,
-              },
+        include: {
+          user: {
+            select: {
+              user_id: true,
+              name: true,
+              profile_image: true,
             },
           },
-          omit: {
-            post_id: true,
-            user_id: true,
-            assignments_id: true,
-            assignments_result_id: true,
-            quiz_id: true,
-            quiz_result_id: true,
+          comment: {
+            include: {
+              user: {
+                select: {
+                  user_id: true,
+                  name: true,
+                  profile_image: true,
+                },
+              },
+            },
+            omit: {
+              post_id: true,
+              user_id: true,
+              assignments_id: true,
+              assignments_result_id: true,
+              quiz_id: true,
+              quiz_result_id: true,
+            },
           },
         },
-      },
-      omit: {
-        class_id: true,
-        user_id: true,
-      },
-    });
+        omit: {
+          class_id: true,
+          user_id: true,
+        },
+      })
+      .withPages({
+        page: queryPage.page,
+        limit: queryPage.limit,
+      });
+
+    return {
+      data,
+      meta,
+    };
   }
 
-  async getPostDetail(postId: string) {
+  async getPostDetail(postId: string, userId: string) {
+    await this.classService.isMemberInClass(userId);
+
     const postInDB = await this.prisma.classPost.findUnique({
       where: {
         post_id: postId,
@@ -83,31 +107,6 @@ export class PostService {
     return postInDB;
   }
 
-  async getPostListComment(postId: string) {
-    return await this.prisma.comment.findMany({
-      where: {
-        post_id: postId,
-      },
-      include: {
-        user: {
-          select: {
-            user_id: true,
-            name: true,
-            profile_image: true,
-          },
-        },
-      },
-      omit: {
-        post_id: true,
-        user_id: true,
-        assignments_id: true,
-        assignments_result_id: true,
-        quiz_id: true,
-        quiz_result_id: true,
-      },
-    });
-  }
-
   async createClassPost(
     payload: CreatePostBody,
     classId: string,
@@ -127,6 +126,8 @@ export class PostService {
     if (!classInDB)
       throw new NotFoundException('Class not found / User has not in class');
 
+    await this.classService.isMemberInClass(userId);
+
     return await this.prisma.classPost.create({
       data: {
         content: payload.content,
@@ -144,7 +145,7 @@ export class PostService {
     });
   }
 
-  async editClassPost(payload: EditPostBody, postId: string) {
+  async editClassPost(payload: EditPostBody, postId: string, userId: string) {
     const classPostInDB = await this.prisma.classPost.findUnique({
       where: {
         post_id: postId,
@@ -152,6 +153,8 @@ export class PostService {
     });
 
     if (!classPostInDB) throw new NotFoundException('Class post not found');
+
+    await this.classService.isMemberInClass(userId);
 
     return await this.prisma.classPost.update({
       data: {
@@ -163,7 +166,7 @@ export class PostService {
     });
   }
 
-  async deleteClassPost(postId: string) {
+  async deleteClassPost(postId: string, userId: string) {
     const classPostInDB = await this.prisma.classPost.findUnique({
       where: {
         post_id: postId,
@@ -171,6 +174,8 @@ export class PostService {
     });
 
     if (!classPostInDB) throw new NotFoundException('Class post not found');
+
+    await this.classService.isMemberInClass(userId);
 
     await this.prisma.comment.deleteMany({
       where: {
