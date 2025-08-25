@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
 import { FormDataRequest } from 'nestjs-form-data';
 import { UploadService } from './upload.service';
-import { GetUser } from 'src/auth/decorator/user.decorator';
-import { JWTPayloadUser } from 'src/auth/types/auth.type';
+import { GetUser } from '../auth/decorator/user.decorator';
+import { JWTPayloadUser } from '../auth/types/auth.type';
 import { DeleteFileDTO, UploadBodyDTO } from './dto/payload.dto';
 
 @Controller('files')

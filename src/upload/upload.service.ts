@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseService } from 'src/supabase/supabase.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { SupabaseService } from '../supabase/supabase.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { DeleteFileDTO, UploadBodyDTO } from './dto/payload.dto';
 
 @Injectable()

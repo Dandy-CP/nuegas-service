@@ -3,11 +3,11 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateClassBody, InviteMemberBody } from './dto/payload.dto';
 import { genClassCode } from '../../utils/genClassCode';
-import { QueryPagination } from 'src/prisma/dto/pagination.dto';
-import { NodemailerService } from 'src/nodemailer/nodemailer.service';
+import { QueryPagination } from '../prisma/dto/pagination.dto';
+import { NodemailerService } from '../nodemailer/nodemailer.service';
 
 @Injectable()
 export class ClassService {

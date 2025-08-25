@@ -9,10 +9,10 @@ import {
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentBody, EditCommentBody } from './dto/payload.dto';
-import { GetUser } from 'src/auth/decorator/user.decorator';
-import { JWTPayloadUser } from 'src/auth/types/auth.type';
+import { GetUser } from '../auth/decorator/user.decorator';
+import { JWTPayloadUser } from '../auth/types/auth.type';
 import { CommentQuery } from './dto/query.dto';
-import { QueryPagination } from 'src/prisma/dto/pagination.dto';
+import { QueryPagination } from '../prisma/dto/pagination.dto';
 
 @Controller('comment')
 export class CommentController {

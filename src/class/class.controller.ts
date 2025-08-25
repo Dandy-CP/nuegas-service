@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
 import { ClassService } from './class.service';
-import { GetUser } from 'src/auth/decorator/user.decorator';
-import { JWTPayloadUser } from 'src/auth/types/auth.type';
+import { GetUser } from '../auth/decorator/user.decorator';
+import { JWTPayloadUser } from '../auth/types/auth.type';
 import { CreateClassBody, InviteMemberBody } from './dto/payload.dto';
-import { QueryPagination } from 'src/prisma/dto/pagination.dto';
+import { QueryPagination } from '../prisma/dto/pagination.dto';
 
 @Controller('class')
 export class ClassController {

@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { ClassService } from 'src/class/class.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { ClassService } from '../class/class.service';
 import { CreatePostBody, EditPostBody } from './dto/payload.dto';
-import { QueryPagination } from 'src/prisma/dto/pagination.dto';
+import { QueryPagination } from '../prisma/dto/pagination.dto';
 
 @Injectable()
 export class PostService {

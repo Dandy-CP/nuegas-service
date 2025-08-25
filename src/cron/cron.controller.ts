@@ -1,6 +1,6 @@
 import { Controller, Get, Param, UnauthorizedException } from '@nestjs/common';
-import { Public } from 'src/auth/decorator/public.decorator';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Public } from '../auth/decorator/public.decorator';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('cron')
 export class CronController {

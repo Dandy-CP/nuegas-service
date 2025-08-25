@@ -9,9 +9,9 @@ import {
 } from '@nestjs/common';
 import { QuizService } from './quiz.service';
 import { CreateQuizBody, SubmitQuizDto } from './dto/payload.dto';
-import { GetUser } from 'src/auth/decorator/user.decorator';
-import { JWTPayloadUser } from 'src/auth/types/auth.type';
-import { QueryPagination } from 'src/prisma/dto/pagination.dto';
+import { GetUser } from '../auth/decorator/user.decorator';
+import { JWTPayloadUser } from '../auth/types/auth.type';
+import { QueryPagination } from '../prisma/dto/pagination.dto';
 
 @Controller('quiz')
 export class QuizController {

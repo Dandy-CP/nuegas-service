@@ -8,15 +8,15 @@ import {
   Query,
 } from '@nestjs/common';
 import { AssignmentService } from './assignment.service';
-import { GetUser } from 'src/auth/decorator/user.decorator';
-import { JWTPayloadUser } from 'src/auth/types/auth.type';
+import { GetUser } from '../auth/decorator/user.decorator';
+import { JWTPayloadUser } from '../auth/types/auth.type';
 import {
   CreateAssignmentBody,
   CreateSubmissionResultBody,
   GivePointBody,
   UpdateAssignmentStatusBody,
 } from './dto/payload.dto';
-import { QueryPagination } from 'src/prisma/dto/pagination.dto';
+import { QueryPagination } from '../prisma/dto/pagination.dto';
 
 @Controller('assignment')
 export class AssignmentController {
