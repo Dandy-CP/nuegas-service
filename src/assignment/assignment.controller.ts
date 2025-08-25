@@ -16,19 +16,34 @@ import {
   GivePointBody,
   UpdateAssignmentStatusBody,
 } from './dto/payload.dto';
+import { QueryPagination } from 'src/prisma/dto/pagination.dto';
 
 @Controller('assignment')
 export class AssignmentController {
   constructor(private readonly assignmentService: AssignmentService) {}
 
   @Get()
-  getAssignmentList(@Query('class_id') classId: string) {
-    return this.assignmentService.getClassAssignment(classId);
+  getAssignmentList(
+    @Query('class_id') classId: string,
+    @Query() query: QueryPagination,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.assignmentService.getClassAssignment(
+      classId,
+      query,
+      user.user_id,
+    );
   }
 
   @Get('/detail')
-  getAssignmentDetail(@Query('assignment_id') assignmentId: string) {
-    return this.assignmentService.getAssignmentDetail(assignmentId);
+  getAssignmentDetail(
+    @Query('assignment_id') assignmentId: string,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.assignmentService.getAssignmentDetail(
+      assignmentId,
+      user.user_id,
+    );
   }
 
   @Post()
@@ -50,7 +65,7 @@ export class AssignmentController {
     @Query('assignment_id') assignmentId: string,
     @GetUser() user: JWTPayloadUser,
   ) {
-    return this.assignmentService.updateAssigment(
+    return this.assignmentService.updateAssignment(
       payload,
       assignmentId,
       user.user_id,
@@ -62,11 +77,11 @@ export class AssignmentController {
     @Query('assignment_id') assignmentId: string,
     @GetUser() user: JWTPayloadUser,
   ) {
-    return this.assignmentService.deleteAssigment(assignmentId, user.user_id);
+    return this.assignmentService.deleteAssignment(assignmentId, user.user_id);
   }
 
   @Put('/status')
-  updateAssigmentStatus(
+  updateAssignmentStatus(
     @Body() payload: UpdateAssignmentStatusBody,
     @Query('assignment_id') assignmentId: string,
     @GetUser() user: JWTPayloadUser,
@@ -78,9 +93,28 @@ export class AssignmentController {
     );
   }
 
-  @Get('/result')
-  getSubmissionResultList(@GetUser() user: JWTPayloadUser) {
-    return this.assignmentService.getSubmissionResultList(user.user_id);
+  @Get('/my-result-list')
+  getSubmissionResultList(
+    @GetUser() user: JWTPayloadUser,
+    @Query() query: QueryPagination,
+  ) {
+    return this.assignmentService.getUserSubmissionResultList(
+      user.user_id,
+      query,
+    );
+  }
+
+  @Get('/all-member-result')
+  getAllMemberResult(
+    @Query('assignment_id') assignmentId: string,
+    @GetUser() user: JWTPayloadUser,
+    @Query() query: QueryPagination,
+  ) {
+    return this.assignmentService.getAllMemberResult(
+      assignmentId,
+      user.user_id,
+      query,
+    );
   }
 
   @Get('/result-detail')
