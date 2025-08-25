@@ -41,6 +41,7 @@ model Class {
   class_assignments     ClassAssignments[]
   class_quiz            ClassQuiz[]
   class_topic           ClassTopic[]
+  invitation            Invitation[]
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
 
@@ -240,4 +241,16 @@ model File {
 
   user                  User               @relation(fields: [uploaded_by], references: [user_id])
   created_at            DateTime           @default(now())
+}
+
+model Invitation {
+  id                    String             @id @default(nanoid())
+  email                 String
+  class_id              String
+  token                 String             @unique
+  status                String             @default("pending") // pending | expired
+  created_at            DateTime           @default(now())
+  expires_at            DateTime
+
+  class                 Class              @relation(fields: [class_id], references: [class_id])
 }
