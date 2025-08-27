@@ -128,6 +128,22 @@ export class AuthService {
       },
     });
 
+    const groupChatInDB = await this.prisma.groupChat.findFirst({
+      where: {
+        class_id: invitation.class_id,
+      },
+    });
+
+    // Join group chat when user accept invitation class
+    if (groupChatInDB) {
+      await this.prisma.groupChatUser.create({
+        data: {
+          group_chat_id: groupChatInDB.group_chat_id,
+          user_id: createdUser.data.user_id,
+        },
+      });
+    }
+
     await this.prisma.invitation.delete({
       where: { id: invitation.id },
     });
