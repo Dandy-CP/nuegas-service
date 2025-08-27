@@ -124,6 +124,21 @@ export class ClassService {
     // Join class as OWNER
     await this.joinClass(userId, createdValue.class_code, 'OWNER');
 
+    // Create group chat on class created
+    const createdGroup = await this.prisma.groupChat.create({
+      data: {
+        class_id: createdValue.class_id,
+      },
+    });
+
+    // Owner Join group chat
+    await this.prisma.groupChatUser.create({
+      data: {
+        group_chat_id: createdGroup.group_chat_id,
+        user_id: userId,
+      },
+    });
+
     return {
       message: 'Success create new class',
       data: createdValue,
@@ -153,6 +168,22 @@ export class ClassService {
     if (!classInDB) throw new NotFoundException('Class not found');
     if (userHasInClass)
       throw new UnprocessableEntityException('User has joined class');
+
+    const groupChatInDB = await this.prisma.groupChat.findFirst({
+      where: {
+        class_id: classInDB.class_id,
+      },
+    });
+
+    // Join group chat when user joined class
+    if (groupChatInDB) {
+      await this.prisma.groupChatUser.create({
+        data: {
+          group_chat_id: groupChatInDB.group_chat_id,
+          user_id: userId,
+        },
+      });
+    }
 
     return await this.prisma.classMember.create({
       data: {
@@ -190,7 +221,7 @@ export class ClassService {
     let successInvited = 0;
     const invited: any[] = [];
     const joined: any[] = [];
-    const errorOnInvite: any[] = [];
+    const failOnInvite: any[] = [];
 
     const invitations = payload.email.map(async (userEmail) => {
       // find registered user in DB by email
@@ -237,12 +268,28 @@ export class ClassService {
             },
           });
 
+          const groupChatInDB = await this.prisma.groupChat.findFirst({
+            where: {
+              class_id: classInDB.class_id,
+            },
+          });
+
+          // Join group chat when user joined class
+          if (groupChatInDB) {
+            await this.prisma.groupChatUser.create({
+              data: {
+                group_chat_id: groupChatInDB.group_chat_id,
+                user_id: userInDB.user_id,
+              },
+            });
+          }
+
           successInvited++;
           joined.push(joinedMember);
           return;
         }
 
-        errorOnInvite.push({
+        failOnInvite.push({
           message: 'User has in class',
           data: userInClass.user,
         });
@@ -275,11 +322,11 @@ export class ClassService {
     await Promise.all(invitations);
 
     return {
-      message: `Success invite ${successInvited} member`,
+      message: `Invited ${successInvited} member`,
       data: {
         joined,
         invited,
-        not_invited: errorOnInvite,
+        fail_invited: failOnInvite,
       },
     };
   }
@@ -337,9 +384,29 @@ export class ClassService {
       where: {
         class_member_id: memberId,
       },
+      include: {
+        class: true,
+      },
     });
 
     if (!userHasInClass) throw new NotFoundException('User not in class');
+
+    const groupChatInDB = await this.prisma.groupChat.findFirst({
+      where: {
+        class_id: userHasInClass.class.class_id,
+      },
+    });
+
+    if (groupChatInDB) {
+      await this.prisma.groupChatUser.delete({
+        where: {
+          group_chat_id_user_id: {
+            group_chat_id: groupChatInDB.group_chat_id,
+            user_id: userHasInClass.user_id,
+          },
+        },
+      });
+    }
 
     await this.prisma.classMember.delete({
       where: {
@@ -363,29 +430,20 @@ export class ClassService {
 
     if (!classInDB) throw new NotFoundException('Class not found');
 
-    await this.prisma.classMember.deleteMany({
+    const groupChatInDB = await this.prisma.groupChat.findFirst({
       where: {
-        class_code: classInDB.class_code,
+        class_id: classInDB.class_id,
       },
     });
 
-    await this.prisma.classPost.deleteMany({
-      where: {
-        class_id: classId,
-      },
-    });
-
-    await this.prisma.classAssignments.deleteMany({
-      where: {
-        class_id: classId,
-      },
-    });
-
-    await this.prisma.classQuiz.deleteMany({
-      where: {
-        class_id: classId,
-      },
-    });
+    if (groupChatInDB) {
+      await this.prisma.groupChat.delete({
+        where: {
+          group_chat_id: groupChatInDB.group_chat_id,
+          class_id: classInDB.class_id,
+        },
+      });
+    }
 
     await this.prisma.class.delete({
       where: {
