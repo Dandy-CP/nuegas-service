@@ -19,7 +19,6 @@ model User {
   is_2fa_active         Boolean           @default(false)
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
-
   class_owner           Class[]
   class_member          ClassMember[]
   assignments           ClassAssignments[]
@@ -29,6 +28,10 @@ model User {
   post                  ClassPost[]
   comment               Comment[]
   files                 File[]
+  chat                  PrivateChatUser[]
+  messages              PrivateMessage[]
+  group_chat            GroupChatUser[]
+  group_message         GroupMessage[]
 }
 
 model Class {
@@ -42,11 +45,12 @@ model Class {
   class_quiz            ClassQuiz[]
   class_topic           ClassTopic[]
   invitation            Invitation[]
+  group_chat            GroupChat[]
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
 
   owner_user_id         String
-  class_owner           User              @relation(fields: [owner_user_id], references: [user_id])
+  class_owner           User              @relation(fields: [owner_user_id], references: [user_id], onDelete: Cascade)
 }
 
 model Comment {
@@ -75,7 +79,7 @@ model ClassTopic {
   name                  String
 
   class_id              String
-  class                 Class             @relation(fields: [class_id], references: [class_id])
+  class                 Class             @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
 
   assignments           ClassAssignments[]
   quizzes               ClassQuiz[]
@@ -89,8 +93,8 @@ model ClassMember {
 
   user_id               String
   class_code            String
-  user                  User              @relation(fields: [user_id], references: [user_id])
-  class                 Class             @relation(fields: [class_code], references: [class_code])
+  user                  User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  class                 Class             @relation(fields: [class_code], references: [class_code], onDelete: Cascade)
 
   @@index([user_id, class_code])
   @@unique([user_id, class_code])
@@ -105,9 +109,9 @@ model ClassPost {
   updated_at            DateTime          @updatedAt
 
   class_id              String
-  class                 Class             @relation(fields: [class_id], references: [class_id])
+  class                 Class             @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
   user_id               String
-  user                  User              @relation(fields: [user_id], references: [user_id])
+  user                  User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model ClassAssignments {
@@ -124,11 +128,11 @@ model ClassAssignments {
   updated_at            DateTime          @updatedAt
 
   class_id              String
-  class                 Class             @relation(fields: [class_id], references: [class_id])
+  class                 Class             @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
   user_id               String
-  user                  User              @relation(fields: [user_id], references: [user_id])
+  user                  User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   topic_id              String
-  topic                 ClassTopic        @relation(fields: [topic_id], references: [topic_id])
+  topic                 ClassTopic        @relation(fields: [topic_id], references: [topic_id], onDelete: Cascade)
 }
 
 model SubmissionResult {
@@ -141,9 +145,9 @@ model SubmissionResult {
   updated_at            DateTime          @updatedAt
 
   assignments_id        String
-  assignments           ClassAssignments  @relation(fields: [assignments_id], references: [assignments_id])
+  assignments           ClassAssignments  @relation(fields: [assignments_id], references: [assignments_id], onDelete: Cascade)
   user_id               String
-  user                  User              @relation(fields: [user_id], references: [user_id])
+  user                  User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@index([user_id, assignments_id])
   @@unique([user_id, assignments_id])
@@ -164,13 +168,13 @@ model ClassQuiz {
   updated_at            DateTime          @updatedAt
 
   class_id              String
-  class                 Class             @relation(fields: [class_id], references: [class_id])
+  class                 Class             @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
 
   user_id               String
-  user                  User              @relation(fields: [user_id], references: [user_id])
+  user                  User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   topic_id              String
-  topic                 ClassTopic        @relation(fields: [topic_id], references: [topic_id])
+  topic                 ClassTopic        @relation(fields: [topic_id], references: [topic_id], onDelete: Cascade)
 }
 
 model QuizContent {
@@ -189,7 +193,7 @@ model QuizContent {
 }
 
 model QuizOption {
-  option_id             String            @id @default(nanoid())
+  option_id             String            @id @unique @default(nanoid())
   text                  String
   is_correct            Boolean           @default(false)
 
@@ -211,7 +215,7 @@ model QuizResult {
   quiz                  ClassQuiz         @relation(fields: [quiz_id], references: [quiz_id], onDelete: Cascade)
 
   user_id               String
-  user                  User              @relation(fields: [user_id], references: [user_id])
+  user                  User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   answers               QuizAnswer[]
 
@@ -220,7 +224,7 @@ model QuizResult {
 }
 
 model QuizAnswer {
-  answer_id             String             @id @default(nanoid())
+  answer_id             String             @id @unique @default(nanoid())
   quiz_content_id       String
   quiz_content          QuizContent        @relation(fields: [quiz_content_id], references: [quiz_content_id], onDelete: Cascade)
 
@@ -232,7 +236,7 @@ model QuizAnswer {
 }
 
 model File {
-  file_id               String             @id @default(nanoid())
+  file_id               String             @id @unique @default(nanoid())
   filename              String
   url                   String
   mimetype              String?
@@ -244,7 +248,7 @@ model File {
 }
 
 model Invitation {
-  id                    String             @id @default(nanoid())
+  id                    String             @id @unique @default(nanoid())
   email                 String
   class_id              String
   token                 String             @unique
@@ -252,5 +256,72 @@ model Invitation {
   created_at            DateTime           @default(now())
   expires_at            DateTime
 
-  class                 Class              @relation(fields: [class_id], references: [class_id])
+  class                 Class              @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
+}
+
+model PrivateChat {
+  chat_id               String             @id @unique @default(nanoid())
+  created_at            DateTime           @default(now())
+  last_message_at       DateTime?
+
+  messages              PrivateMessage[]
+  users                 PrivateChatUser[]
+}
+
+model PrivateChatUser {
+  id                    String             @id @unique @default(nanoid())
+  chat_id               String
+  user_id               String
+
+  chat                  PrivateChat        @relation(fields: [chat_id], references: [chat_id], onDelete: Cascade)
+  user                  User               @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([chat_id, user_id])
+}
+
+model PrivateMessage {
+  message_id            String             @id @unique @default(nanoid())
+  chat_id               String
+  sender_id             String
+  message               String
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+  read_at               DateTime?
+
+  chat                  PrivateChat        @relation(fields: [chat_id], references: [chat_id], onDelete: Cascade)
+  sender                User               @relation(fields: [sender_id], references: [user_id], onDelete: Cascade)
+}
+
+model GroupChat {
+  group_chat_id         String             @id @unique @default(nanoid())
+  created_at            DateTime           @default(now())
+  last_message_at       DateTime?
+  class_id              String
+  
+  class                 Class              @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
+  user                  GroupChatUser[]
+  message               GroupMessage[]
+}
+
+model GroupChatUser {
+  id                    String             @id @unique @default(nanoid())
+  group_chat_id         String
+  user_id               String
+
+  chat                  GroupChat          @relation(fields: [group_chat_id], references: [group_chat_id], onDelete: Cascade)
+  user                  User               @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([group_chat_id, user_id])
+}
+
+model GroupMessage {
+  id                    String             @id @unique @default(nanoid())
+  group_chat_id         String
+  sender_id             String
+  message               String
+  created_at            DateTime           @default(now())
+  read_at               DateTime?
+
+  chat                  GroupChat          @relation(fields: [group_chat_id], references: [group_chat_id], onDelete: Cascade)
+  sender                User               @relation(fields: [sender_id], references: [user_id], onDelete: Cascade)
 }
