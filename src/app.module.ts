@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AppController } from './app.controller';
@@ -15,6 +16,9 @@ import { UploadModule } from './upload/upload.module';
 import { QuizModule } from './quiz/quiz.module';
 import { NodemailerModule } from './nodemailer/nodemailer.module';
 import { CronModule } from './cron/corn.module';
+import { ChatModule } from './chat/chat.module';
+import { AuthGuard } from './auth/auth.guard';
+import { GroupChatModule } from './group-chat/group-chat.module';
 
 @Module({
   imports: [
@@ -38,8 +42,16 @@ import { CronModule } from './cron/corn.module';
     CommentModule,
     UploadModule,
     QuizModule,
+    ChatModule,
+    GroupChatModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}
