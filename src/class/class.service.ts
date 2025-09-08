@@ -4,9 +4,10 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NodemailerService } from '../nodemailer/nodemailer.service';
+import { genClassCode } from '../../utils/genClassCode';
 import { CreateClassBody, InviteMemberBody } from './dto/payload.dto';
 import { QueryPagination } from '../prisma/dto/pagination.dto';
-import { NodemailerService } from '../nodemailer/nodemailer.service';
 
 @Injectable()
 export class ClassService {
@@ -105,8 +106,7 @@ export class ClassService {
   }
 
   async createMyClass(payload: CreateClassBody, userId: string) {
-    const { genClassCode } = await import('../../utils/genClassCode');
-    const classCode = await genClassCode();
+    const classCode = genClassCode();
 
     const createdValue = await this.prisma.class.create({
       data: {
