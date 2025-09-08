@@ -26,6 +26,16 @@ export class ClassService {
         omit: {
           owner_user_id: true,
         },
+        include: {
+          _count: {
+            select: {
+              class_members: true,
+            },
+          },
+        },
+        orderBy: {
+          created_at: 'asc',
+        },
       })
       .withPages({
         page: queryPage.page,
@@ -33,7 +43,10 @@ export class ClassService {
       });
 
     return {
-      data,
+      data: data.map(({ _count, ...value }) => ({
+        ...value,
+        memberCount: _count.class_members,
+      })),
       meta,
     };
   }
@@ -48,9 +61,15 @@ export class ClassService {
               user_id: userId,
             },
           },
+          owner_user_id: {
+            not: userId,
+          },
         },
         omit: {
           owner_user_id: true,
+        },
+        orderBy: {
+          created_at: 'asc',
         },
       })
       .withPages({
@@ -65,6 +84,8 @@ export class ClassService {
   }
 
   async getClassDetail(classId: string, userId: string) {
+    await this.isMemberInClass(userId);
+
     const classInDB = await this.prisma.class.findUnique({
       where: {
         class_id: classId,
@@ -344,6 +365,8 @@ export class ClassService {
     });
 
     if (!classInDB) throw new NotFoundException('Class not found');
+
+    await this.isMemberInClass(userId);
 
     const [data, meta] = await this.prisma
       .extends()
