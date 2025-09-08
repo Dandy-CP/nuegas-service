@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClassBody, InviteMemberBody } from './dto/payload.dto';
-import { genClassCode } from '../../utils/genClassCode';
 import { QueryPagination } from '../prisma/dto/pagination.dto';
 import { NodemailerService } from '../nodemailer/nodemailer.service';
 
@@ -106,6 +105,7 @@ export class ClassService {
   }
 
   async createMyClass(payload: CreateClassBody, userId: string) {
+    const { genClassCode } = await import('../../utils/genClassCode');
     const classCode = await genClassCode();
 
     const createdValue = await this.prisma.class.create({
