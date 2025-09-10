@@ -45,6 +45,9 @@ export class CommentService {
           assignments_result_id: assignments_result_id,
           quiz_result_id: quiz_result_id,
         },
+        orderBy: {
+          created_at: 'asc',
+        },
         include: {
           user: {
             select: {

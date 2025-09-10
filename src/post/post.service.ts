@@ -24,6 +24,9 @@ export class PostService {
         where: {
           class_id: classId,
         },
+        orderBy: {
+          created_at: 'desc',
+        },
         include: {
           user: {
             select: {
