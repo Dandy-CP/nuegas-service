@@ -19,6 +19,7 @@ import { CronModule } from './cron/corn.module';
 import { ChatModule } from './chat/chat.module';
 import { AuthGuard } from './auth/auth.guard';
 import { GroupChatModule } from './group-chat/group-chat.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { GroupChatModule } from './group-chat/group-chat.module';
     QuizModule,
     ChatModule,
     GroupChatModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [
