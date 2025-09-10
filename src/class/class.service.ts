@@ -116,14 +116,18 @@ export class ClassService {
         class_quiz: true,
         class_timeline: true,
       },
-      omit: {
-        owner_user_id: true,
-      },
     });
 
     if (!classInDB) throw new NotFoundException('Class not found');
 
-    return classInDB;
+    const isOwner = classInDB.owner_user_id === userId;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { owner_user_id, ...classData } = classInDB;
+
+    return {
+      ...classData,
+      isOwner,
+    };
   }
 
   async createMyClass(payload: CreateClassBody, userId: string) {
