@@ -134,6 +134,7 @@ export class PostService {
     return await this.prisma.classPost.create({
       data: {
         content: payload.content,
+        attachment: payload.attachment,
         class: {
           connect: {
             class_id: classId,
@@ -162,6 +163,7 @@ export class PostService {
     return await this.prisma.classPost.update({
       data: {
         content: payload.content,
+        attachment: payload.attachment,
       },
       where: {
         post_id: postId,
