@@ -15,7 +15,7 @@ export class AuthController {
 
   @Get('/logged-user')
   getLoggedInUser(@GetUser() user: JWTPayloadUser) {
-    return user;
+    return this.authService.getLoggedInUserData(user.user_id);
   }
 
   @Public()

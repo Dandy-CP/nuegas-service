@@ -153,4 +153,18 @@ export class AuthService {
       data: createdUser,
     };
   }
+
+  async getLoggedInUserData(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: {
+        user_id: userId,
+      },
+      omit: {
+        password: true,
+        totp_secret: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+  }
 }
