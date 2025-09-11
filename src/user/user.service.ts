@@ -8,6 +8,7 @@ export class UserService {
   async getMyTask(userId: string) {
     return await this.prisma.classAssignments.findMany({
       where: {
+        is_available: true,
         class: {
           class_members: {
             some: {
