@@ -6,7 +6,11 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { NodemailerService } from '../nodemailer/nodemailer.service';
 import { genClassCode } from '../../utils/genClassCode';
-import { CreateClassBody, InviteMemberBody } from './dto/payload.dto';
+import {
+  CreateClassBody,
+  InviteMemberBody,
+  UpdateClassBody,
+} from './dto/payload.dto';
 import { QueryPagination } from '../prisma/dto/pagination.dto';
 
 @Injectable()
@@ -481,6 +485,35 @@ export class ClassService {
     return {
       message: 'Success delete class',
     };
+  }
+
+  async editClass(payload: UpdateClassBody, classId: string, userId: string) {
+    await this.isUserOwnerClass(userId);
+
+    return await this.prisma.class.update({
+      where: {
+        class_id: classId,
+      },
+      data: {
+        name: payload.class_name,
+        description: payload.class_description,
+      },
+    });
+  }
+
+  async generateNewClassCode(classId: string, userId: string) {
+    await this.isUserOwnerClass(userId);
+
+    const classCode = genClassCode();
+
+    return await this.prisma.class.update({
+      where: {
+        class_id: classId,
+      },
+      data: {
+        class_code: classCode,
+      },
+    });
   }
 
   async isMemberInClass(userId: string) {

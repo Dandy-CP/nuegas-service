@@ -1,8 +1,20 @@
-import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ClassService } from './class.service';
 import { GetUser } from '../auth/decorator/user.decorator';
 import { JWTPayloadUser } from '../auth/types/auth.type';
-import { CreateClassBody, InviteMemberBody } from './dto/payload.dto';
+import {
+  CreateClassBody,
+  InviteMemberBody,
+  UpdateClassBody,
+} from './dto/payload.dto';
 import { QueryPagination } from '../prisma/dto/pagination.dto';
 
 @Controller('class')
@@ -45,6 +57,23 @@ export class ClassController {
     @GetUser() user: JWTPayloadUser,
   ) {
     return this.classService.createMyClass(payload, user.user_id);
+  }
+
+  @Put('/edit')
+  updateClass(
+    @Body() payload: UpdateClassBody,
+    @Query('class_id') classId: string,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.classService.editClass(payload, classId, user.user_id);
+  }
+
+  @Put('/generate-code')
+  generateNewClassCode(
+    @Query('class_id') classId: string,
+    @GetUser() user: JWTPayloadUser,
+  ) {
+    return this.classService.generateNewClassCode(classId, user.user_id);
   }
 
   @Delete()

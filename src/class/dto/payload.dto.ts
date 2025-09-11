@@ -10,6 +10,16 @@ export class CreateClassBody {
   class_description: string;
 }
 
+export class UpdateClassBody {
+  @IsNotEmpty()
+  @IsString()
+  class_name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  class_description: string;
+}
+
 export class InviteMemberBody {
   @IsNotEmpty()
   @IsArray()
