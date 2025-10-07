@@ -131,8 +131,8 @@ model ClassAssignments {
   class                 Class             @relation(fields: [class_id], references: [class_id], onDelete: Cascade)
   user_id               String
   user                  User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  topic_id              String
-  topic                 ClassTopic        @relation(fields: [topic_id], references: [topic_id], onDelete: Cascade)
+  topic_id              String?
+  topic                 ClassTopic?        @relation(fields: [topic_id], references: [topic_id], onDelete: Cascade)
 }
 
 model SubmissionResult {
@@ -173,8 +173,8 @@ model ClassQuiz {
   user_id               String
   user                  User              @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
-  topic_id              String
-  topic                 ClassTopic        @relation(fields: [topic_id], references: [topic_id], onDelete: Cascade)
+  topic_id              String?
+  topic                 ClassTopic?        @relation(fields: [topic_id], references: [topic_id], onDelete: Cascade)
 }
 
 model QuizContent {
