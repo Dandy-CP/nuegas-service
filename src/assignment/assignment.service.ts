@@ -88,6 +88,7 @@ export class AssignmentService {
             },
           },
         },
+        user: true,
       },
       omit: {
         topic_id: true,
@@ -98,7 +99,13 @@ export class AssignmentService {
 
     if (!assignmentInDB) throw new NotFoundException('Assignment not found');
 
-    return assignmentInDB;
+    const isOwnerClass = assignmentInDB.user.user_id === userId;
+    const { user, ...assignmentData } = assignmentInDB;
+
+    return {
+      ...assignmentData,
+      isOwnerClass,
+    };
   }
 
   async createAssignment(
@@ -123,11 +130,13 @@ export class AssignmentService {
         attachment: payload.attachment,
         start_date: payload.start_date,
         due_date: payload.due_date,
-        topic: {
-          connect: {
-            topic_id: payload.topic,
+        ...(payload.topic && {
+          topic: {
+            connect: {
+              topic_id: payload.topic,
+            },
           },
-        },
+        }),
         class: {
           connect: {
             class_id: classId,
@@ -170,11 +179,13 @@ export class AssignmentService {
         attachment: payload.attachment,
         start_date: payload.start_date,
         due_date: payload.due_date,
-        topic: {
-          connect: {
-            topic_id: payload.topic,
+        ...(payload.topic && {
+          topic: {
+            connect: {
+              topic_id: payload.topic,
+            },
           },
-        },
+        }),
       },
     });
   }
