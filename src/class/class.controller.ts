@@ -51,6 +51,11 @@ export class ClassController {
     return this.classService.getClassMember(classId, query, user.user_id);
   }
 
+  @Get('/pending-member')
+  getPendingMember(@Query('class_id') classId: string) {
+    return this.classService.getPendingInviteMember(classId);
+  }
+
   @Post('/create-my-class')
   createClass(
     @Body() payload: CreateClassBody,
@@ -107,5 +112,10 @@ export class ClassController {
     @GetUser() user: JWTPayloadUser,
   ) {
     return this.classService.deleteClassMember(memberId, user.user_id);
+  }
+
+  @Delete('/pending-member')
+  deletePendingMember(@Query('invitation_id') invitationId: string) {
+    return this.classService.deletePendingInviteMember(invitationId);
   }
 }

@@ -125,7 +125,6 @@ export class ClassService {
     if (!classInDB) throw new NotFoundException('Class not found');
 
     const isOwner = classInDB.owner_user_id === userId;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { owner_user_id, ...classData } = classInDB;
 
     return {
@@ -405,6 +404,42 @@ export class ClassService {
     return {
       data,
       meta,
+    };
+  }
+
+  async getPendingInviteMember(classId: string) {
+    if (!classId)
+      throw new UnprocessableEntityException('Query class_id not provided');
+
+    return await this.prisma.invitation.findMany({
+      where: {
+        class_id: classId,
+      },
+    });
+  }
+
+  async deletePendingInviteMember(invitationId: string) {
+    if (!invitationId)
+      throw new UnprocessableEntityException(
+        'Query invitation_Id not provided',
+      );
+
+    const invitationInDB = await this.prisma.invitation.findUnique({
+      where: {
+        id: invitationId,
+      },
+    });
+
+    if (!invitationInDB) throw new NotFoundException('Invitation not found');
+
+    await this.prisma.invitation.delete({
+      where: {
+        id: invitationId,
+      },
+    });
+
+    return {
+      message: 'Success delete invitation',
     };
   }
 
