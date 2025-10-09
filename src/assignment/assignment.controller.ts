@@ -118,8 +118,14 @@ export class AssignmentController {
   }
 
   @Get('/result-detail')
-  getSubmissionResultDetail(@Query('result_id') resultId: string) {
-    return this.assignmentService.getSubmissionResultDetail(resultId);
+  getSubmissionResultDetail(
+    @GetUser() user: JWTPayloadUser,
+    @Query('assignment_id') assignmentId: string,
+  ) {
+    return this.assignmentService.getSubmissionResultDetail(
+      user.user_id,
+      assignmentId,
+    );
   }
 
   @Post('/result')

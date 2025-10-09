@@ -314,10 +314,13 @@ export class AssignmentService {
     };
   }
 
-  async getSubmissionResultDetail(resultId: string) {
+  async getSubmissionResultDetail(userId: string, assignmentId: string) {
     const submissionResultInDB = await this.prisma.submissionResult.findUnique({
       where: {
-        result_id: resultId,
+        user_id_assignments_id: {
+          user_id: userId,
+          assignments_id: assignmentId,
+        },
       },
       include: {
         user: {
