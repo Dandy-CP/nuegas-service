@@ -15,6 +15,8 @@ import { ChatService } from './chat.service';
 import { AuthWsMiddleware } from '../auth/middleware/auth-ws.middleware';
 import { WsAuthGuard } from '../auth/socket.guard';
 import {
+  deleteChatBody,
+  getNextMessageBody,
   onDeleteMessageBody,
   onEditMessageBody,
   onReadMessageBody,
@@ -80,5 +82,21 @@ export class ChatGateway
     @ConnectedSocket() client: Socket,
   ) {
     return this.chatService.onReadMessage(client, body);
+  }
+
+  @SubscribeMessage('getNextMessage')
+  handleGetNextMessage(
+    @MessageBody() body: getNextMessageBody,
+    @ConnectedSocket() client: Socket,
+  ) {
+    return this.chatService.getNextMessage(client, body.last_message_id);
+  }
+
+  @SubscribeMessage('deleteChat')
+  handleDeleteChat(
+    @MessageBody() body: deleteChatBody,
+    @ConnectedSocket() client: Socket,
+  ) {
+    return this.chatService.deleteChat(client, body.chat_id);
   }
 }

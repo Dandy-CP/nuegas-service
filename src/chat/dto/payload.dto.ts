@@ -25,3 +25,13 @@ export class onReadMessageBody {
   @IsString()
   read_at: string;
 }
+
+export class getNextMessageBody {
+  @IsString()
+  last_message_id: string;
+}
+
+export class deleteChatBody {
+  @IsString()
+  chat_id: string;
+}

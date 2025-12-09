@@ -89,13 +89,28 @@ export class ChatService {
       },
     });
 
+    // Update Last Message
+    await this.prisma.privateChat.update({
+      where: { chat_id: chatId },
+      data: { last_message_at: new Date() },
+    });
+
     const { chat, ...message } = createdMessage;
     const receiverId = chat.users[0].user_id;
 
+    // Send event to receiver
     client.to(chatId).emit('onReceiveMessage', {
       data: {
         ...message,
         self: false,
+      },
+    });
+
+    // Send event to sender
+    client.emit('onReceiveMessage', {
+      data: {
+        ...message,
+        self: true,
       },
     });
 
@@ -105,7 +120,7 @@ export class ChatService {
       message: createdMessage.message,
     });
 
-    client.to(receiverId).emit('onChatList', {
+    client.to(receiverId).emit('onChatListUpdate', {
       data: {
         chatId: createdMessage.chat_id,
         partner: {
@@ -138,6 +153,11 @@ export class ChatService {
     client.to(chatId).emit('onMessageDeleted', {
       data: deletedMessage,
     });
+
+    // Send same event to sender
+    client.emit('onMessageDeleted', {
+      data: deletedMessage,
+    });
   }
 
   async onEditMessage(client: Socket, body: onEditMessageBody) {
@@ -153,6 +173,11 @@ export class ChatService {
     });
 
     client.to(chatId).emit('onMessageEdited', {
+      data: editedMessage,
+    });
+
+    // Send same event to sender
+    client.emit('onMessageEdited', {
       data: editedMessage,
     });
   }
@@ -172,46 +197,17 @@ export class ChatService {
     client.to(chatId).emit('onMessageReaded', {
       data: readedMessage,
     });
+
+    // Send same event to sender
+    client.emit('onMessageReaded', {
+      data: readedMessage,
+    });
   }
 
   async onListenToChatList(client: Socket) {
     const user = client.data.user as JWTPayloadUser;
 
-    const chatList = await this.prisma.privateChat.findMany({
-      where: {
-        users: {
-          some: {
-            user_id: user.user_id,
-          },
-        },
-      },
-      include: {
-        users: {
-          include: {
-            user: true,
-          },
-        },
-        messages: {
-          orderBy: { created_at: 'desc' },
-          take: 1,
-        },
-      },
-    });
-
-    const chat = chatList.map((chat) => {
-      const partner = chat.users.find(
-        (value) => value.user_id !== user.user_id,
-      )?.user;
-      const lastMessage = chat.messages[0] || null;
-
-      return {
-        chatId: chat.chat_id,
-        partner: partner
-          ? { id: partner.user_id, name: partner.name, email: partner.email }
-          : null,
-        lastMessage,
-      };
-    });
+    const chat = await this.getUserChatList(user.user_id);
 
     client.emit('onChatList', {
       data: chat,
@@ -227,7 +223,7 @@ export class ChatService {
   }
 
   async getUserChatList(userId: string) {
-    const chatInDB = await this.prisma.privateChat.findMany({
+    const chatList = await this.prisma.privateChat.findMany({
       where: {
         users: {
           some: {
@@ -237,52 +233,41 @@ export class ChatService {
       },
       include: {
         users: {
-          // Get receiver user
-          where: {
-            user_id: { not: userId },
-          },
           include: {
-            user: {
-              select: {
-                user_id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-          omit: {
-            chat_id: true,
-            user_id: true,
+            user: true,
           },
         },
         messages: {
-          orderBy: {
-            created_at: 'desc',
-          },
+          orderBy: { created_at: 'desc' },
           take: 1,
-          include: {
-            sender: true,
-          },
         },
+      },
+      orderBy: {
+        last_message_at: 'desc',
       },
     });
 
-    return chatInDB.map((value) => {
+    return chatList.map((chat) => {
+      const partner = chat.users.find(
+        (value) => value.user_id !== userId,
+      )?.user;
+
+      const lastMessage = chat.messages[0] || null;
+
       return {
-        chat_id: value.chat_id,
-        created_at: value.created_at,
-        last_message_at: value.last_message_at,
-        receiver_user: value.users[0],
-        last_message: value.messages[0] ?? null,
+        chatId: chat.chat_id,
+        partner: partner
+          ? { id: partner.user_id, name: partner.name, email: partner.email }
+          : null,
+        lastMessage,
       };
     });
   }
 
-  async getExistingMessage(
-    chatId: string,
-    userId: string,
-    takeMessage: number = 10,
-  ) {
+  async getNextMessage(client: Socket, lastMessageId: string) {
+    const chatId = client.handshake.query.chatId as string;
+    const user = client.data.user as JWTPayloadUser;
+
     const existingChatInDB = await this.prisma.privateMessage.findMany({
       where: {
         chat_id: chatId,
@@ -301,7 +286,43 @@ export class ChatService {
         },
       },
       orderBy: { created_at: 'desc' },
-      take: takeMessage,
+      take: 10,
+      skip: 1,
+      cursor: { message_id: lastMessageId },
+    });
+
+    const messageData = existingChatInDB.reverse().map((value) => {
+      return {
+        ...value,
+        self: value.sender.user_id === user.user_id,
+      };
+    });
+
+    client.emit('onNextMessage', {
+      data: messageData,
+    });
+  }
+
+  async getExistingMessage(chatId: string, userId: string) {
+    const existingChatInDB = await this.prisma.privateMessage.findMany({
+      where: {
+        chat_id: chatId,
+      },
+      select: {
+        message_id: true,
+        message: true,
+        created_at: true,
+        read_at: true,
+        sender: {
+          select: {
+            user_id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+      take: 10,
     });
 
     return {
@@ -355,6 +376,37 @@ export class ChatService {
         },
         messages: true,
       },
+    });
+  }
+
+  async deleteChat(client: Socket, chatId: string) {
+    const user = client.data.user as JWTPayloadUser;
+
+    const existingChat = await this.prisma.privateChat.findFirst({
+      where: {
+        chat_id: chatId,
+      },
+      include: {
+        users: true,
+      },
+    });
+
+    if (!existingChat) {
+      client.emit('onError', {
+        message: 'Chat Not Exist',
+      });
+    }
+
+    await this.prisma.privateChat.delete({
+      where: {
+        chat_id: chatId,
+      },
+    });
+
+    const chat = await this.getUserChatList(user.user_id);
+
+    client.emit('onChatListDeleted', {
+      data: chat,
     });
   }
 
