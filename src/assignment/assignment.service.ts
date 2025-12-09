@@ -61,6 +61,20 @@ export class AssignmentService {
     };
   }
 
+  async getUpcomingTaskList(classId: string) {
+    return await this.prisma.classAssignments.findMany({
+      where: {
+        class_id: classId,
+        is_available: true,
+      },
+      select: {
+        assignments_id: true,
+        title: true,
+        due_date: true,
+      },
+    });
+  }
+
   async getAssignmentDetail(assignmentId: string, userId: string) {
     await this.classService.isMemberInClass(userId);
 

@@ -35,6 +35,11 @@ export class AssignmentController {
     );
   }
 
+  @Get('/upcoming-task')
+  getUpcomingTask(@Query('class_id') classId: string) {
+    return this.assignmentService.getUpcomingTaskList(classId);
+  }
+
   @Get('/detail')
   getAssignmentDetail(
     @Query('assignment_id') assignmentId: string,
