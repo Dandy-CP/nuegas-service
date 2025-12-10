@@ -83,6 +83,12 @@ export class AssignmentService {
         assignments_id: assignmentId,
       },
       include: {
+        class: {
+          select: {
+            class_id: true,
+            name: true,
+          },
+        },
         topic: {
           select: {
             topic_id: true,
